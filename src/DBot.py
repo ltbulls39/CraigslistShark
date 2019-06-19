@@ -5,7 +5,7 @@ import sqlite3
 from sqlite3 import Error
 ########################
 # Only used to get token
-import token as tok
+import d_token as tok
 ########################
 
 client = commands.Bot(command_prefix='.')
