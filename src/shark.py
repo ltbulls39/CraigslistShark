@@ -11,15 +11,27 @@ import os
 # default to filtering out the data
 
 class Shark:
-    def __init__(self, query):
-        self.craig = CraigslistForSale(site='sandiego', filters={'query' : query})
-        prev = os.path.dirname(os.getcwd())
-        db = os.path.join(prev, 'database', 'craigslist_results.db')
-        self.conn = self.connect_db(db)
+    def __init__(self, query=None):
+        if query is not None:
+            self.craig = CraigslistForSale(site='sandiego', filters={'query' : query})
+            prev = os.path.dirname(os.getcwd())
+            db = os.path.join(prev, 'database', 'craigslist_results.db')
+            self.conn = self.connect_db(db)
 
-        # Fill db with queried items now
+            # Fill db with queried items now
 
-        self.sql_init(query)
+            self.sql_init(query)
+
+
+    def close_db(self):
+        '''
+        Closes the connection to the DB
+        :return:
+        '''
+        try:
+            self.conn.close()
+        except Error as e:
+            print(e)
 
 
     def sql_init(self, query):
@@ -27,7 +39,7 @@ class Shark:
         Initializes all the sql functions to their initial state
         :return:
         '''
-        result_set = self.get_query(limit=10)
+        result_set = self.get_query(limit=50)
         for result in result_set:
             self.insert_db(result, query)
 
@@ -45,6 +57,7 @@ class Shark:
         '''
         try:
             conn = sqlite3.connect(db_file)
+            x = conn.execute('pragma journal_mode=wal')
             return conn
         except Error as e:
             print(e)
@@ -103,7 +116,22 @@ class Shark:
         rows = cur.fetchall()
         return rows
 
+    def select_by_hash_from_db(self, item):
+        h = hash(item)
+        cur = self.conn.cursor()
+        cur.execute('SELECT * FROM computers WHERE query_id = ?', (str(h),))
+
+        rows = cur.fetchall()
+        return rows
+
+
     def get_query(self, limit=0, year=None):
+        '''
+        Gets results back from web search
+        :param limit:
+        :param year:
+        :return:
+        '''
         results = []
         for result in self.craig.get_results(limit=limit):
             if year is not None:
@@ -119,8 +147,7 @@ class Shark:
         :param data: list of data to filter
         :return outliers:
         '''
-        # TODO I'm calling this with an entire row
-        # TODO Call this with all of the price data
+        # TODO Fix so it actually filters data with a better algorithm
         mean = np.mean(data)
         std = np.std(data)
         outliers = []
