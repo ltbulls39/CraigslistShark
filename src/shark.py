@@ -12,11 +12,11 @@ import os
 
 class Shark:
     def __init__(self, query=None):
+        prev = os.path.dirname(os.getcwd())
+        db = os.path.join(prev, 'database', 'craigslist_results.db')
+        self.conn = self.connect_db(db)
         if query is not None:
             self.craig = CraigslistForSale(site='sandiego', filters={'query' : query})
-            prev = os.path.dirname(os.getcwd())
-            db = os.path.join(prev, 'database', 'craigslist_results.db')
-            self.conn = self.connect_db(db)
 
             # Fill db with queried items now
 
@@ -44,7 +44,7 @@ class Shark:
             self.insert_db(result, query)
 
         data = self.select_price_from_db()
-        print(data)
+        # print(data)
         outliers = self.filter_data(data)
         self.remove_filtered_from_db(outliers)
 
@@ -112,6 +112,14 @@ class Shark:
     def select_price_from_db(self):
         cur = self.conn.cursor()
         cur.execute('SELECT price FROM computers')
+
+        rows = cur.fetchall()
+        return rows
+
+    def price_with_query(self, query):
+        h = str(hash(query))
+        cur = self.conn.cursor()
+        cur.execute('SELECT price FROM computers WHERE query_id = ?', (query,))
 
         rows = cur.fetchall()
         return rows
