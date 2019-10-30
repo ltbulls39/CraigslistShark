@@ -76,9 +76,18 @@ async def shark(context, *args):
                 - price         -> [4]
                 - query_hashed  -> [5]
         '''
-        print(rows)
+        for row in rows:
+            print(row)
         try:
-            index = random.randint(0, len(rows))
+            i = 0
+            while i < 50:
+                index = random.randint(0, len(rows))
+                p = rows[index][4]
+                if p >= 100:
+                    break
+
+
+            # index = random.randint(0, len(rows))
             id = rows[index][0]
             url = rows[index][2]
             price = rows[index][4]
